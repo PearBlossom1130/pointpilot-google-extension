@@ -283,7 +283,22 @@ document.addEventListener('DOMContentLoaded', function() {
         if (isLink) {
             return `<p><strong>${label}:</strong> <a href="${value}" target="_blank">${value}</a></p>`;
         }
+        if (label === 'Username') {
+            return createInfoParagraphWithCopy(label, value, 'username');
+        }
         return `<p><strong>${label}:</strong> ${value}</p>`;
+    }
+
+    function createInfoParagraphWithCopy(label, value, id) {
+        return `
+            <p>
+                <strong>${label}:</strong>
+                <span class="value-with-copy">
+                    <span id="${id}">${value}</span>
+                    <button type="button" class="copy-button" data-target="${id}" title="Copy ${label}">📋</button>
+                </span>
+            </p>
+        `;
     }
 
     function createPasswordParagraph(password, index) {
@@ -292,6 +307,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <span class="password-container">
                     <span id="password${index}">${'•'.repeat(decrypt(password).length)}</span>
                     <button type="button" class="togglePassword" data-index="${index}">👁️</button>
+                    <button type="button" class="copy-button" data-target="password${index}" title="Copy Password">📋</button>
                 </span>
             </p>
         `;
@@ -325,6 +341,10 @@ document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.remove-button').forEach(button => {
             button.addEventListener('click', removeCard);
         });
+
+        document.querySelectorAll('.copy-button').forEach(button => {
+            button.addEventListener('click', copyToClipboard);
+        });
     }
 
     function togglePassword(event) {
@@ -354,6 +374,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    function copyToClipboard(event) {
+        const targetId = event.target.getAttribute('data-target');
+        const targetElement = document.getElementById(targetId);
+        let textToCopy = targetElement.textContent;
+
+        // 비밀번호인 경우 복호화된 값을 복사
+        if (targetId.startsWith('password')) {
+            const index = targetId.replace('password', '');
+            textToCopy = decrypt(cards[index].password);
+        }
+
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            alert('Copied to clipboard!');
+        }).catch(err => {
+            console.error('Failed to copy: ', err);
+        });
+    }
+
     function showEditForm(card, index) {
         const cardElement = document.querySelector(`.card-info[data-index="${index}"]`);
         if (!cardElement) {
@@ -365,42 +403,86 @@ document.addEventListener('DOMContentLoaded', function() {
         
         cardElement.innerHTML = `
             <form class="edit-form">
-                <input type="text" id="editCardName" value="${card.name}" required>
-                <input type="text" id="editApplicantName" value="${card.applicantName}" required>
-                <input type="email" id="editApplicantEmail" value="${card.applicantEmail || ''}" placeholder="Email">
-                <input type="tel" id="editApplicantPhone" value="${card.applicantPhone || ''}" placeholder="Phone">
-                <input type="text" id="editLastFourDigits" value="${card.lastFourDigits}" maxlength="4" pattern="\\d{4}" required>
-                <input type="date" id="editApplicationDate" value="${card.applicationDate}" required>
-                <div>
-                    <div class="annual-fee-container">
-                        <label>Has annual fee:</label>
-                        <div class="radio-group">
-                            <label>
-                                <input type="radio" name="editHasAnnualFee" value="yes" 
-                                    ${card.hasAnnualFee ? 'checked' : ''}>
-                                Yes
-                            </label>
-                            <label>
-                                <input type="radio" name="editHasAnnualFee" value="no" 
-                                    ${!card.hasAnnualFee ? 'checked' : ''}>
-                                No
-                            </label>
-                    </div>  
+                <div class="form-group">
+                    <label for="editCardName">Card Name:</label>
+                    <input type="text" id="editCardName" value="${card.name}" required>
                 </div>
-                <input type="number" id="editAnnualFeeAmount" value="${card.annualFeeAmount}" ${card.hasAnnualFee ? '' : 'disabled'} step="0.01" min="0">
-                <input type="date" id="editAnnualFeeDate" value="${card.annualFeeDate === '9999-12-31' ? '' : card.annualFeeDate}" ${card.hasAnnualFee ? '' : 'disabled'}>
-                <input type="number" id="editChurningMonths" value="${card.churningMonths || ''}" placeholder="Churning months (e.g., 24)" min="0">
-                <input type="url" id="editCardWebsite" value="${card.website || ''}" placeholder="Card website URL">
-                <input type="text" id="editCardUsername" value="${card.username || ''}" placeholder="Username for card website">
-                <div class="password-container">
-                    <input type="password" id="editCardPassword" value="${decrypt(card.password) || ''}" placeholder="Password for card website">
-                    <button type="button" id="editTogglePassword">👁️</button>
+                <div class="form-group">
+                    <label for="editApplicantName">Applicant Name:</label>
+                    <input type="text" id="editApplicantName" value="${card.applicantName}" required>
                 </div>
-                <textarea id="editCardBenefits" placeholder="Enter card benefits">${card.benefits || ''}</textarea>
-                <label class="benefit-received-label">
-                    <input type="checkbox" id="editBenefitReceived" ${card.benefitReceived ? 'checked' : ''}>
-                    <span>Benefit Received</span>
-                </label>
+                <div class="form-group">
+                    <label for="editApplicantEmail">Email:</label>
+                    <input type="email" id="editApplicantEmail" value="${card.applicantEmail || ''}" placeholder="Email">
+                </div>
+                <div class="form-group">
+                    <label for="editApplicantPhone">Phone Number:</label>
+                    <input type="tel" id="editApplicantPhone" value="${card.applicantPhone || ''}" placeholder="Phone Number">
+                </div>
+                <div class="form-group">
+                    <label for="editLastFourDigits">Last 4 Digits:</label>
+                    <input type="text" id="editLastFourDigits" value="${card.lastFourDigits}" maxlength="4" pattern="\\d{4}" required>
+                </div>
+                <div class="form-group">
+                    <label for="editApplicationDate">Application Date:</label>
+                    <input type="date" id="editApplicationDate" value="${card.applicationDate}" required>
+                </div>
+                <div class="form-group">
+                    <label>Has Annual Fee:</label>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="editHasAnnualFee" value="yes" ${card.hasAnnualFee ? 'checked' : ''}>
+                            Yes
+                        </label>
+                        <label>
+                            <input type="radio" name="editHasAnnualFee" value="no" ${!card.hasAnnualFee ? 'checked' : ''}>
+                            No
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="editAnnualFeeAmount">Annual Fee Amount:</label>
+                    <input type="number" id="editAnnualFeeAmount" value="${card.annualFeeAmount}" ${card.hasAnnualFee ? '' : 'disabled'} step="0.01" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="editAnnualFeeDate">Annual Fee Date:</label>
+                    <input type="date" id="editAnnualFeeDate" value="${card.annualFeeDate === '9999-12-31' ? '' : card.annualFeeDate}" ${card.hasAnnualFee ? '' : 'disabled'}>
+                </div>
+                <div class="form-group">
+                    <label for="editChurningMonths">Churning Months:</label>
+                    <input type="number" id="editChurningMonths" value="${card.churningMonths || ''}" placeholder="Months until reapplication (e.g., 24)" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="editCardWebsite">Card Website:</label>
+                    <input type="url" id="editCardWebsite" value="${card.website || ''}" placeholder="Card Website URL">
+                </div>
+                 <div class="form-group">
+                    <label for="editCardUsername">Website Username:</label>
+                    <div class="input-with-copy">
+                        <input type="text" id="editCardUsername" value="${card.username || ''}" placeholder="Card Website Username">
+                        <button type="button" class="copy-button" data-target="editCardUsername">Copy</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="editCardPassword">Website Password:</label>
+                    <div class="input-with-copy">
+                        <div class="password-container">
+                            <input type="password" id="editCardPassword" value="${decrypt(card.password) || ''}" placeholder="Card Website Password">
+                            <button type="button" id="editTogglePassword">👁️</button>
+                        </div>
+                        <button type="button" class="copy-button" data-target="editCardPassword">Copy</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="editCardBenefits">Card Benefits:</label>
+                    <textarea id="editCardBenefits" placeholder="Enter card benefits">${card.benefits || ''}</textarea>
+                </div>
+                <div class="form-group">
+                    <label class="benefit-received-label">
+                        <input type="checkbox" id="editBenefitReceived" ${card.benefitReceived ? 'checked' : ''}>
+                        <span>Benefit Received</span>
+                    </label>
+                </div>
                 <button type="submit">Save Changes</button>
                 <button type="button" id="cancelEdit">Cancel</button>
             </form>
@@ -416,6 +498,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 const hasAnnualFee = this.value === 'yes';
                 editAnnualFeeAmountInput.disabled = !hasAnnualFee;
                 editAnnualFeeDateInput.disabled = !hasAnnualFee;
+            });
+        });
+
+        const copyButtons = cardElement.querySelectorAll('.copy-button');
+            copyButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const targetId = this.getAttribute('data-target');
+                    const targetInput = document.getElementById(targetId);
+                    targetInput.select();
+                    document.execCommand('copy');
+                    alert('Copied to clipboard!');
             });
         });
 

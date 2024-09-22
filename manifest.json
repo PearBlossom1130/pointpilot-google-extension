@@ -1,6 +1,6 @@
 {
     "manifest_version": 3,
-    "name": "Credit Card Points Manager",
+    "name": "Point Pilot",
     "version": "1.0",
     "description": "Manage your credit card points easily and save locally.",
     "action": {
