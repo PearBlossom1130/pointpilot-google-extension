@@ -264,8 +264,8 @@ document.addEventListener('DOMContentLoaded', function() {
             ${createInfoParagraph('Benefits', card.benefits)}
             <p>
                 <label class="benefit-received-label">
-                    <input type="checkbox" class="benefit-received" data-index="${index}" ${card.benefitReceived ? 'checked' : ''} disabled>
                     <span>Benefit Received</span>
+                    <input type="checkbox" class="benefit-received" data-index="${index}" ${card.benefitReceived ? 'checked' : ''} disabled>
                 </label>
             </p>
             ${createInfoParagraph('Website', card.website, true)}
@@ -372,13 +372,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 <input type="text" id="editLastFourDigits" value="${card.lastFourDigits}" maxlength="4" pattern="\\d{4}" required>
                 <input type="date" id="editApplicationDate" value="${card.applicationDate}" required>
                 <div>
-                    <label>Has annual fee:</label>
-                    <label>
-                        <input type="radio" name="editHasAnnualFee" value="yes" ${card.hasAnnualFee ? 'checked' : ''}> Yes
-                    </label>
-                    <label>
-                        <input type="radio" name="editHasAnnualFee" value="no" ${!card.hasAnnualFee ? 'checked' : ''}> No
-                    </label>
+                    <div class="annual-fee-container">
+                        <label>Has annual fee:</label>
+                        <div class="radio-group">
+                            <label>
+                                <input type="radio" name="editHasAnnualFee" value="yes" 
+                                    ${card.hasAnnualFee ? 'checked' : ''}>
+                                Yes
+                            </label>
+                            <label>
+                                <input type="radio" name="editHasAnnualFee" value="no" 
+                                    ${!card.hasAnnualFee ? 'checked' : ''}>
+                                No
+                            </label>
+                    </div>  
                 </div>
                 <input type="number" id="editAnnualFeeAmount" value="${card.annualFeeAmount}" ${card.hasAnnualFee ? '' : 'disabled'} step="0.01" min="0">
                 <input type="date" id="editAnnualFeeDate" value="${card.annualFeeDate === '9999-12-31' ? '' : card.annualFeeDate}" ${card.hasAnnualFee ? '' : 'disabled'}>
